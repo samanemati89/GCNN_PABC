@@ -4,9 +4,9 @@ This repository contains code for a **Graph Neural Network (GNN)** model designe
 
 ## 🧠 Project Overview
 - **Graph Structure:**
-  - **Nodes** = Brain regions (from DTI)
-  - **Edges** = Structural connectivity strength
-  - **Node Features** = Resting-state fMRI time-series
+  - **Nodes** = Brain regions (defined based on the JHU atlas)
+  - **Edges** = Structural connectivity strength (from the DTI scans)
+  - **Node Features** = Resting-state fMRI time-series (from the rfMRI scans)
 
 - **Models Implemented:**
   - **Graph Convolutional Network (GCN)**
