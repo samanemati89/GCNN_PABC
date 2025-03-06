@@ -1,4 +1,4 @@
-# GCNN - Graph Convolutional Neural Network for Post-Stroke Aphasia Classification
+# GCNN - Graph Convolutional Neural Network for Classifying Post-Stroke Aphasia Patients from Healthy Controls
 
 This repository contains code for a **Graph Neural Network (GNN)** model designed to classify **patients with post-stroke aphasia** from **healthy controls** based on their **brain connectivity graphs**.
 
