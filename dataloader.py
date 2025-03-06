@@ -17,17 +17,18 @@ class Polar(DGLDataset):
 		
 
 		self.items_list, self.label_names = self.get_matirx_list()
+		
+		self.gclasses = len(self.label_names)
 
 	def	get_matirx_list(self):
 		
 		items_list = []
 		label_names = []
 
-		counter = 0
-		for root, dirs, files in os.walk(self.graphs_base, topdown=True):
+		for idx, (root, dirs, files) in enumerate(os.walk(self.graphs_base, topdown=True)):
 			nftrs_root = os.path.join(self.node_features_base, os.path.split(root)[1])
 			
-			if counter == 0:
+			if idx == 0:
 				label_names = dirs
 
 			for file in files:
@@ -36,11 +37,10 @@ class Polar(DGLDataset):
 						{
 							"graph": os.path.join(root, file),
 							"node_features": os.path.join(nftrs_root, file),
-							"label": counter - 1,
-							"label_name": label_names[counter - 1]	
+							"label": idx - 1,
+							"label_name": label_names[idx - 1]	
 						}
 					)
-			counter += 1
 
 		return items_list, label_names
 
@@ -51,39 +51,38 @@ class Polar(DGLDataset):
 		label = self.items_list[index]["label"]
 		label_name = self.items_list[index]["label_name"]
 
-		node_features = np.loadtxt(nftrs_dir, delimiter=",")
+		node_features = np.loadtxt(nftrs_dir, delimiter=",", dtype=np.float32)
+		edge_weights = np.loadtxt(graph_dir, delimiter=",", dtype=np.float32)
+		
+		# node_features = (node_features - 8512.963) / 2559.9653 
+		# edge_weights = (edge_weights - 2.862617) / 9.373531 
 
-		edge_weights = np.loadtxt(graph_dir, delimiter=",")
-		edge_weights = np.squeeze(edge_weights.reshape(1, -1))
+		# MinMax Normalization
+		node_features = 2 * ((node_features - 0.0) / 20608.0) -1 
+		edge_weights = 2 * ((edge_weights - 0.0) / 503.96) -1 		
 
-		src = [[0 for i in range(self.num_nodes)] for j in range(self.num_nodes)]
+		edge_weights = np.ravel(edge_weights)
 
-		for i in range(len(src)):
-			for j in range(len(src[i])):
-				src[i][j] = i
-		src = np.array(src).flatten()
-
-		det = [[i for i in range(self.num_nodes)] for j in range(self.num_nodes)]
-		det = np.array(det).flatten()
-
+		src = np.repeat(np.arange(self.num_nodes), self.num_nodes)
+		det = np.tile(np.arange(self.num_nodes), self.num_nodes)
 		u, v = (torch.tensor(src), torch.tensor(det))
 		g = dgl.graph((u, v))
 
         # add node features and edge features
-		g.ndata["node_features"] = torch.from_numpy(node_features)
-		g.edata["edge_weights"] = torch.from_numpy(edge_weights)
+		g.ndata["feat"] = torch.from_numpy(node_features)
+		g.edata["weight"] = torch.from_numpy(edge_weights)
 
-		return g, label, label_name
+		return g, label
 
 	def __len__(self):
 		return len(self.items_list)
 
 def main():
-	dataset = Polar("./dataset", "train")
-	print(f"Size of train set: {len(dataset):d}")
+	dataset = Polar("dataset", "train")
+	print(f"Size of set: {len(dataset):d}")
 	dataiter = iter(dataset)
-	g, label, label_name = next(dataiter)
-	print(g, label, label_name)
+	g, label = next(dataiter)
+	print(g, label)
 
 
 if __name__ == "__main__":
